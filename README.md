@@ -6,11 +6,10 @@ Built with **Clean Architecture**, **BLoC (Cubit)**, **dependency injection (`ge
 ---
 
 ## ✨ Preview
-
 | Light Mode | Dark Mode |
-|-------------|------------|
-| ![Movies Grid Light](assets/screenshots/movies_grid_light.png) | ![Movies Grid Dark](assets/screenshots/movies_grid_dark.png) |
-| ![Movie Details Light](assets/screenshots/movie_details_light.png) | ![Movie Details Dark](assets/screenshots/movie_details_dark.png) |
+|-------------|-----------|
+| <img src="assets/screenshots/light_home.png" alt="Movies Grid Light" width="250" height="500"/> | <img src="assets/screenshots/dark_home.png" alt="Movies Grid Dark" width="250" height="500"/> |
+| <img src="assets/screenshots/light_details.png" alt="Movie Details Light" width="250" height="500"/> | <img src="assets/screenshots/dark_details.png" alt="Movie Details Dark" width="250" height="500"/> |
 
 > 📸 Store screenshots in `assets/screenshots/` and update the paths above.
 
@@ -31,5 +30,9 @@ Built with **Clean Architecture**, **BLoC (Cubit)**, **dependency injection (`ge
 
 ---
 
-## 🧱 Architecture Overview
+## 🧱 sentry
+
+<img width="1801" height="816" alt="Screenshot 2025-11-01 183152" src="https://github.com/user-attachments/assets/0c104a32-0f40-4772-8a21-e62e8e209faf" />
+
+
 
