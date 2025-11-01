@@ -4,6 +4,7 @@ import '../cubit/movie_cubit.dart';
 import '../cubit/movie_state.dart';
 import '../../domain/entities/movie.dart';
 import '../../domain/entities/page_movie.dart';
+import 'movie_card.dart'; // added import
 
 class MovieBodyView extends StatefulWidget {
   const MovieBodyView({super.key});
@@ -49,66 +50,6 @@ class _MovieBodyViewState extends State<MovieBodyView> {
       ..removeListener(_onScroll)
       ..dispose();
     super.dispose();
-  }
-
-  Widget _movieCard(Movie m) {
-    return Card(
-      clipBehavior: Clip.hardEdge,
-      elevation: 2,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: m.posterPath != null
-                ? Image.network(
-                    '$_imageBase${m.posterPath}',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        const Center(child: Icon(Icons.broken_image)),
-                    loadingBuilder: (ctx, child, progress) {
-                      if (progress == null) return child;
-                      return const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      );
-                    },
-                  )
-                : const Center(child: Icon(Icons.movie, size: 48)),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  m.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    if (m.voteAverage != null)
-                      Row(
-                        children: [
-                          const Icon(Icons.star, size: 14, color: Colors.amber),
-                          const SizedBox(width: 4),
-                          Text((m.voteAverage ?? 0).toStringAsFixed(1)),
-                        ],
-                      ),
-                    const Spacer(),
-                    Text(
-                      m.releaseDate ?? '',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -224,7 +165,8 @@ class _MovieBodyViewState extends State<MovieBodyView> {
                       );
                     }
                     final m = movies[index];
-                    return _movieCard(m);
+                    // use new MovieCard widget
+                    return MovieCard(movie: m);
                   },
                 ),
               ),
