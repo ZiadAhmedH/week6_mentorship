@@ -5,15 +5,33 @@ import 'package:week6_task/core/theme/cubit/theme_state.dart';
 import 'core/service_locator.dart' as di;
 import 'core/theme/cubit/theme_cubit.dart';
 import 'features/movies/presentation/view/movie_view.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await di.init();
-  runApp(
-    BlocProvider(create: (_) => di.sl<ThemeCubit>(), child: const MyApp()),
+
+  final sentryDsn = dotenv.env['SENTRY_DSN'];
+
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = sentryDsn;
+      options.tracesSampleRate = 0.01;
+      options.profilesSampleRate = 0.01;
+    },
+    appRunner: () => runApp(
+      SentryWidget(
+        child: BlocProvider(
+          create: (_) => di.sl<ThemeCubit>(),
+          child: const MyApp(),
+        ),
+      ),
+    ),
   );
+
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

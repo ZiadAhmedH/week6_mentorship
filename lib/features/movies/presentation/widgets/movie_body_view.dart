@@ -22,7 +22,7 @@ class _MovieBodyViewState extends State<MovieBodyView> {
   }
 
   void _onScroll() {
-    final cubit = context.read<MovieCubit>();
+    final cubit = BlocProvider.of<MovieCubit>(context);
     final state = cubit.state;
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -33,7 +33,7 @@ class _MovieBodyViewState extends State<MovieBodyView> {
   }
 
   Future<void> _onRefresh() async {
-    final cubit = context.read<MovieCubit>();
+    final cubit = BlocProvider.of<MovieCubit>(context);
     cubit.reset();
     await cubit.loadInitial();
   }
@@ -63,7 +63,6 @@ class _MovieBodyViewState extends State<MovieBodyView> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // determine paginated and current movies
           PaginatedMovies? paginated;
           bool isLoadingMore = false;
 
@@ -144,9 +143,13 @@ class _MovieBodyViewState extends State<MovieBodyView> {
                     itemBuilder: (context, index) {
                       if (index >= movies.length) {
                         return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: CircularProgressIndicator(),
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            ],
                           ),
                         );
                       }
