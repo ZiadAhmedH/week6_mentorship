@@ -1,12 +1,9 @@
-// ...existing code...
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failure.dart';
 import '../entities/movie.dart';
 import '../entities/page_movie.dart';
 import '../repo/movie_interface_repo.dart';
 
-/// Keeps paging state outside the Cubit/UI.
-/// Use fetchNext() to load next page; reset() to start over.
 class MoviePaginator {
   final MovieRepository repository;
 
@@ -17,30 +14,30 @@ class MoviePaginator {
 
   MoviePaginator(this.repository);
 
-  /// Fetch next page and append to internal list.
-  /// Returns cumulative PaginatedMovies on success.
   Future<Either<Failure, PaginatedMovies>> fetchNext() async {
-    if (_loading)
+    if (_loading) {
       return Right(
         PaginatedMovies(
           page: _currentPage,
           totalPages: _totalPages,
           movies: List.unmodifiable(_items),
         ),
-      ); // avoid concurrent calls
-    if (_currentPage >= _totalPages)
+      );
+    }
+    if (_currentPage >= _totalPages) {
       return Right(
         PaginatedMovies(
           page: _currentPage,
           totalPages: _totalPages,
           movies: List.unmodifiable(_items),
         ),
-      ); // no more pages
+      );
+    }
 
     _loading = true;
     final nextPage = _currentPage + 1;
-    final Either<Failure, PaginatedMovies> res = (await repository
-        .getPopularMovies(page: nextPage)) as Either<Failure, PaginatedMovies>;
+    final Either<Failure, PaginatedMovies> res = await repository
+        .getPopularMovies(page: nextPage);
     _loading = false;
 
     return res.fold((f) => Left(f), (paginated) {
@@ -57,13 +54,11 @@ class MoviePaginator {
     });
   }
 
-  /// Fetch a specific page (does not clear accumulated items by default).
-  /// Returns cumulative PaginatedMovies on success.
   Future<Either<Failure, PaginatedMovies>> fetchPage(
     int page, {
     bool clearBefore = false,
   }) async {
-    if (_loading)
+    if (_loading) {
       return Right(
         PaginatedMovies(
           page: _currentPage,
@@ -71,9 +66,10 @@ class MoviePaginator {
           movies: List.unmodifiable(_items),
         ),
       );
+    }
     _loading = true;
-    final Either<Failure, PaginatedMovies> res = (await repository
-        .getPopularMovies(page: page)) as Either<Failure, PaginatedMovies>;
+    final Either<Failure, PaginatedMovies> res = await repository
+        .getPopularMovies(page: page);
     _loading = false;
 
     return res.fold((f) => Left(f), (paginated) {
