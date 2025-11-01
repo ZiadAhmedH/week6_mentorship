@@ -1,22 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart' show dotenv;
-import 'package:week6_task/features/movies/presentation/view/movie_view.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:week6_task/core/config/sentry/sentry_service.dart';
+import 'package:week6_task/core/theme/cubit/theme_state.dart';
+import 'core/service_locator.dart' as di;
+import 'core/theme/cubit/theme_cubit.dart';
+import 'features/movies/presentation/view/movie_view.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
-import 'core/service_locator.dart';
-
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-   
-     await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: ".env");
+  await di.init();
 
+  final sentryDsn = dotenv.env['SENTRY_DSN'];
 
-     await init();   
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = sentryDsn;
+      options.tracesSampleRate = 0.01;
+      options.profilesSampleRate = 0.01;
+    },
+    appRunner: () => runApp(
+      SentryWidget(
+        child: BlocProvider(
+          create: (_) => di.sl<ThemeCubit>(),
+          child: const MyApp(),
+        ),
+      ),
+    ),
+  );
 
- 
+  await SentryService().captureException(
+    SentryException(
+      type: 'AppStart',
+      value: 'Application has started successfully',
+    ),
+  );
 
-
-
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -24,12 +45,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MoviesView(),
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, themeState) {
+        return MaterialApp(
+          title: 'Flutter Demo',
+          theme: themeState.themeData,
+          home: const MoviesView(),
+        );
+      },
     );
   }
 }
