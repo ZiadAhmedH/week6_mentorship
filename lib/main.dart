@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart' show dotenv;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:week6_task/core/config/sentry/sentry_service.dart';
 import 'package:week6_task/core/theme/cubit/theme_state.dart';
 import 'core/service_locator.dart' as di;
 import 'core/theme/cubit/theme_cubit.dart';
@@ -30,8 +31,14 @@ Future<void> main() async {
     ),
   );
 
-}
+  await SentryService().captureException(
+    SentryException(
+      type: 'AppStart',
+      value: 'Application has started successfully',
+    ),
+  );
 
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
