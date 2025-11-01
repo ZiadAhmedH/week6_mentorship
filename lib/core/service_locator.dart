@@ -10,11 +10,11 @@ import '../features/movies/domain/usecases/movie_paginator.dart';
 import '../features/movies/presentation/cubit/movie_cubit.dart';
 import '../features/movies/domain/repo/movie_interface_repo.dart';
 import 'errors/logger.dart';
+import '../core/theme/cubit/theme_cubit.dart';
 
 final sl = GetIt.instance;
 
-final String _tmdbBearerToken =  dotenv.env['TMDB_BEARER_TOKEN'] ?? '';
-    
+final String _tmdbBearerToken = dotenv.env['TMDB_BEARER_TOKEN'] ?? '';
 
 Future<void> init() async {
   // Hive
@@ -50,4 +50,7 @@ Future<void> init() async {
 
   // Cubit now depends on paginator
   sl.registerFactory(() => MovieCubit(paginator: sl()));
+
+  // Theme cubit
+  sl.registerFactory(() => ThemeCubit());
 }

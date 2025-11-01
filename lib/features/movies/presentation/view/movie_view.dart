@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:week6_task/core/service_locator.dart';
-
+import '../../../../core/theme/cubit/theme_cubit.dart';
 import '../cubit/movie_cubit.dart';
 import '../widgets/movie_body_view.dart';
 
@@ -13,8 +13,17 @@ class MoviesView extends StatelessWidget {
     return BlocProvider(
       create: (_) => sl<MovieCubit>()..loadInitial(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Popular Movies'), centerTitle: true),
-        body: MovieBodyView(),
+        appBar: AppBar(
+          title: const Text('Popular Movies'),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.brightness_6),
+              onPressed: () => context.read<ThemeCubit>().toggle(),
+            ),
+          ],
+        ),
+        body: const MovieBodyView(),
       ),
     );
   }
