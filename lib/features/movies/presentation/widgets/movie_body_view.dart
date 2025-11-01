@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../cubit/movie_cubit.dart';
 import '../cubit/movie_state.dart';
 import '../../domain/entities/movie.dart';
+import '../../domain/entities/page_movie.dart';
 
 class MovieBodyView extends StatefulWidget {
   const MovieBodyView({super.key});
@@ -138,25 +138,46 @@ class _MovieBodyViewState extends State<MovieBodyView> {
           );
         }
 
-        // Loaded or loading more
-        final List<Movie> movies;
-        final bool isLoadingMore = state is MovieLoadingMore;
+        // determine paginated and current movies
+        PaginatedMovies? paginated;
+        bool isLoadingMore = false;
+
         if (state is MovieLoaded) {
-          movies = state.movies;
+          paginated = state.paginated;
         } else if (state is MovieLoadingMore) {
-          movies = state.current;
-        } else {
-          movies = [];
+          paginated = state.current;
+          isLoadingMore = true;
         }
+
+        final movies = paginated?.movies ?? [];
+
+        // show offline/cached banner when data is from cache
+        final showCachedBanner = paginated?.isFromCache ?? false;
 
         if (movies.isEmpty) {
           return RefreshIndicator(
             onRefresh: _onRefresh,
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              children: const [
-                SizedBox(height: 80),
-                Center(child: Text('No movies found')),
+              children: [
+                if (showCachedBanner)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Center(
+                      child: ColoredBox(
+                        color: Colors.amberAccent,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          child: Text('Offline — showing cached data'),
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 80),
+                const Center(child: Text('No movies found')),
               ],
             ),
           );
@@ -164,29 +185,50 @@ class _MovieBodyViewState extends State<MovieBodyView> {
 
         return RefreshIndicator(
           onRefresh: _onRefresh,
-          child: GridView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.all(8),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.62,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemCount: movies.length + (isLoadingMore ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index >= movies.length) {
-                // bottom loading indicator
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(),
+          child: Column(
+            children: [
+              if (showCachedBanner)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Center(
+                    child: ColoredBox(
+                      color: Colors.amberAccent,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        child: Text('Offline — showing cached data'),
+                      ),
+                    ),
                   ),
-                );
-              }
-              final m = movies[index];
-              return _movieCard(m);
-            },
+                ),
+              Expanded(
+                child: GridView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(8),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.62,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                  ),
+                  itemCount: movies.length + (isLoadingMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index >= movies.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+                    final m = movies[index];
+                    return _movieCard(m);
+                  },
+                ),
+              ),
+            ],
           ),
         );
       },
