@@ -2,7 +2,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-
+import 'package:week6_task/core/config/connectivity/connectivity_service.dart';
 import '../features/movies/data/data_source/movie_local_source.dart';
 import '../features/movies/data/data_source/movie_remote_data_source.dart';
 import '../features/movies/data/repo/movie_reop_impl.dart';
@@ -32,6 +32,9 @@ Future<void> init() async {
     ),
   );
   sl.registerLazySingleton(() => dio);
+
+  // Connectivity service
+  sl.registerLazySingleton(() => ConnectivityService());
 
   // Register AppLogger
   sl.registerLazySingleton(() => AppLogger());

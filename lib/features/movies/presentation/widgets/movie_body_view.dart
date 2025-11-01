@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/config/connectivity/connectivity_service.dart';
 import '../cubit/movie_cubit.dart';
 import '../cubit/movie_state.dart';
 import '../../domain/entities/page_movie.dart';
 import 'movie_card.dart'; // added import
+import 'package:week6_task/core/service_locator.dart';
 
 class MovieBodyView extends StatefulWidget {
   const MovieBodyView({super.key});
@@ -14,11 +17,57 @@ class MovieBodyView extends StatefulWidget {
 
 class _MovieBodyViewState extends State<MovieBodyView> {
   final ScrollController _scrollController = ScrollController();
+  late StreamSubscription<bool> _connSub;
+  bool _isOnline = true;
+
+  // show transient banner when connectivity toggles (1 second)
+  bool _showTransientBanner = false;
+  Timer? _transientBannerTimer;
+
+  // If service locator didn't provide ConnectivityService, keep a local one to clean up
+  ConnectivityService? _localConn;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
+    // listen connectivity changes (use DI instance if registered; otherwise create local)
+    final conn = sl.isRegistered<ConnectivityService>()
+        ? sl<ConnectivityService>()
+        : (ConnectivityService()..initialize());
+    if (!sl.isRegistered<ConnectivityService>()) {
+      _localConn = conn;
+    }
+    _isOnline = conn.isOnline;
+    _connSub = conn.onStatusChange.listen((online) {
+      if (!mounted) return;
+
+      // set online state and show transient banner
+      setState(() {
+        _isOnline = online;
+        _showTransientBanner = true;
+      });
+
+      // cancel previous timer and schedule hide after 1 second
+      _transientBannerTimer?.cancel();
+      _transientBannerTimer = Timer(const Duration(seconds: 1), () {
+        if (!mounted) return;
+        setState(() => _showTransientBanner = false);
+      });
+
+      final msg = online
+          ? 'Back online — using network'
+          : 'Offline — showing cached data';
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 1), // show snackbar only 1s
+        ),
+      );
+    });
   }
 
   void _onScroll() {
@@ -40,7 +89,11 @@ class _MovieBodyViewState extends State<MovieBodyView> {
 
   @override
   void dispose() {
-    _scrollController..dispose();
+    _connSub.cancel();
+    _transientBannerTimer?.cancel();
+    // dispose local connectivity service if we created one here
+    _localConn?.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -76,31 +129,37 @@ class _MovieBodyViewState extends State<MovieBodyView> {
           }
 
           final movies = paginated?.movies ?? [];
+          // decide banner:
+          Widget statusBanner = const SizedBox.shrink();
 
-          final showCachedBanner = paginated?.isFromCache ?? false;
+          // Offline -> persistent amber banner
+          if (!_isOnline) {
+            statusBanner = Container(
+              width: double.infinity,
+              color: Colors.amberAccent,
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: const Center(child: Text('Offline — showing cached data')),
+            );
 
+            // When online but paginated is from cache, show stale banner only transiently
+          } else if ((paginated?.isFromCache ?? false) &&
+              _showTransientBanner) {
+            statusBanner = Container(
+              width: double.infinity,
+              color: Colors.blueGrey.shade100,
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: const Center(child: Text('Showing cached data (stale)')),
+            );
+          }
+
+          // use statusBanner in the layout
           if (movies.isEmpty) {
             return RefreshIndicator(
               onRefresh: _onRefresh,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  if (showCachedBanner)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Center(
-                        child: ColoredBox(
-                          color: Colors.amberAccent,
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            child: Text('Offline — showing cached data'),
-                          ),
-                        ),
-                      ),
-                    ),
+                  statusBanner,
                   const SizedBox(height: 80),
                   const Center(child: Text('No movies found')),
                 ],
@@ -112,22 +171,7 @@ class _MovieBodyViewState extends State<MovieBodyView> {
             onRefresh: _onRefresh,
             child: Column(
               children: [
-                if (showCachedBanner)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Center(
-                      child: ColoredBox(
-                        color: Colors.amberAccent,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          child: Text('Offline — showing cached data'),
-                        ),
-                      ),
-                    ),
-                  ),
+                statusBanner,
                 Expanded(
                   child: GridView.builder(
                     controller: _scrollController,
@@ -143,13 +187,9 @@ class _MovieBodyViewState extends State<MovieBodyView> {
                     itemBuilder: (context, index) {
                       if (index >= movies.length) {
                         return const Center(
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: CircularProgressIndicator(),
-                              ),
-                            ],
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: CircularProgressIndicator(),
                           ),
                         );
                       }

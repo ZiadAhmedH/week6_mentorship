@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart' show dotenv;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:week6_task/core/config/sentry/sentry_service.dart';
 import 'package:week6_task/core/theme/cubit/theme_state.dart';
+import 'core/config/connectivity/connectivity_service.dart';
 import 'core/service_locator.dart' as di;
 import 'core/theme/cubit/theme_cubit.dart';
 import 'features/movies/presentation/view/movie_view.dart';
@@ -38,6 +39,8 @@ Future<void> main() async {
     ),
   );
 
+  // initialize connectivity AFTER runApp / plugin registration
+  await di.sl<ConnectivityService>().initialize();
 }
 
 class MyApp extends StatelessWidget {
