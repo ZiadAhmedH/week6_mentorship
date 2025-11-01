@@ -1,70 +1,35 @@
-# Week6 Task — Movies App
+# 🎬 Week6 Task — **Movies App**
 
-Lightweight Flutter app that shows popular movies (TMDB) with pagination, offline cache, logging and Sentry integration. Designed with clean separation: data / domain / presentation, BLoC (Cubit) for state, and a MoviePaginator use-case to keep pagination logic out of the UI.
-
----
-
-## Screenshots
-
-Replace these placeholders with real screenshots in `docs/screenshots/`:
-
-- Movies grid (home)
-  
-  ![Movies Grid](docs/screenshots/movies_grid.png)
-
-- Movie details (Netflix-like UI)
-  
-  ![Movie Details](docs/screenshots/movie_details.png)
-
-- Offline cached banner / snackbar
-  
-  ![Offline Banner](docs/screenshots/offline_banner.png)
+A sleek Flutter app that displays **popular movies from TMDB**, featuring **infinite scroll pagination**, **offline caching**, and **error tracking via Sentry**.  
+Built with **Clean Architecture**, **BLoC (Cubit)**, **dependency injection (`get_it`)**, and a **beautiful dark/light theme** for a modern cinema-style experience.
 
 ---
 
-## Features
+## ✨ Preview
 
-- Fetch popular movies from TMDB API
-- Domain-layer pagination using `MoviePaginator` (CUBIT does not manage page state)
-- Offline cache per-page (Hive); stale-fallback when network unavailable
-- AppLogger (console + optional external handler)
-- Sentry integration via `SentryService` helper and `SentryException` wrapper
-- Simple theme switcher (dark / light) via `ThemeCubit`
-- Clean UI:
-  - MoviesView (BlocProvider) -> MovieBodyView (grid with pull-to-refresh and infinite scroll)
-  - MovieDetailsView (simple Netflix-like layout)
-  - Reusable `MovieCard` using `cached_network_image`
-- Snackbars for transient network/fallback messages
-- Service locator with `get_it`
+| Light Mode | Dark Mode |
+|-------------|------------|
+| ![Movies Grid Light](assets/screenshots/movies_grid_light.png) | ![Movies Grid Dark](assets/screenshots/movies_grid_dark.png) |
+| ![Movie Details Light](assets/screenshots/movie_details_light.png) | ![Movie Details Dark](assets/screenshots/movie_details_dark.png) |
+
+> 📸 Store screenshots in `assets/screenshots/` and update the paths above.
 
 ---
 
-## Architecture (high level)
+## 🎥 Features
 
-- features/
-  - movies/
-    - data/ (remote/local/data models, repo impl)
-    - domain/ (entities, repo interface, use-cases like `MoviePaginator`)
-    - presentation/ (cubit, views, widgets)
-- core/
-  - service locator, app logger, sentry wrapper, theme
-
-Key design choices:
-- Repository returns `PaginatedMovies` with `isFromCache` flag
-- `MoviePaginator` handles page state & merging
-- UI (`MovieBodyView`) consumes `MovieState` and shows cached banner/snackbar on fallback
+- 🔥 **Popular Movies Feed** — fetches from TMDB with proper pagination  
+- ⚙️ **Domain-layer Pagination** — logic handled by `MoviePaginator` (keeps UI clean)  
+- 💾 **Offline Cache (Hive)** — view cached pages when offline  
+- 🧠 **Clean Architecture** — separation of Data / Domain / Presentation  
+- 🌗 **Dynamic Theming** — dark/light toggle via `ThemeCubit`  
+- 🪄 **BLoC (Cubit)** — predictable state management  
+- 🚨 **Sentry Integration** — automatic crash & error reporting  
+- 💬 **Snackbars & Banners** — show network or cache status  
+- 🧭 **Dependency Injection** — with `get_it` service locator  
+- 🎨 **Modern UI** — smooth grid layout, rich cards, consistent colors  
 
 ---
 
-## Getting started
+## 🧱 Architecture Overview
 
-Prerequisites:
-- Flutter SDK (tested on stable 3.7+ / adjust for your setup)
-- Android/iOS toolchain configured
-- A TMDB API token (v4 Bearer) and optional Sentry DSN
-
-1. Clone and open project:
-   git clone <repo>
-   cd week6_task
-
-2. Create `.env` file in project root:
