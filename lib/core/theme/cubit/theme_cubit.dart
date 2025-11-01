@@ -7,7 +7,7 @@ import 'theme_state.dart';
 
 
 class ThemeCubit extends Cubit<ThemeState> {
-  ThemeCubit() : super(ThemeState(AppTheme.light));
+  ThemeCubit() : super(ThemeState(AppTheme.dark));
 
   void switchToDark() => emit(ThemeState(AppTheme.dark));
   void switchToLight() => emit(ThemeState(AppTheme.light));
