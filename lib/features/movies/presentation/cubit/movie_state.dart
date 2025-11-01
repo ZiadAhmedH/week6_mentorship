@@ -20,3 +20,10 @@ class MovieError extends MovieState {
   final String message;
   MovieError(this.message);
 }
+
+// transient message state to notify UI (snackbar)
+class MovieMessage extends MovieState {
+  final String message;
+  final PaginatedMovies? paginated;
+  MovieMessage(this.message, {this.paginated});
+}

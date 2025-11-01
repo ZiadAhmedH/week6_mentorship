@@ -1,7 +1,8 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:week6_task/core/errors/logger.dart';
 import 'package:week6_task/core/errors/failure.dart';
-import '../../../../core/errors/logger.dart';
+
 import '../../domain/entities/page_movie.dart';
 import '../../domain/repo/movie_interface_repo.dart';
 import '../data_source/movie_local_source.dart';
@@ -24,10 +25,10 @@ class MovieRepositoryImpl implements MovieRepository {
     int page = 1,
   }) async {
     try {
-      // 1)  cache first يا سلام علي الحلاة 
+      // 1) Try cache first (fresh)
       final cached = local.getCachedPage(page);
       if (cached != null && cached['results'] is List) {
-        logger.info('MovieRepository: returning cached page $page');
+        logger.info('MovieRepository: returning cached page $page (fresh)');
         final list = (cached['results'] as List)
             .map(
               (e) => MovieModel.fromJson(
@@ -46,7 +47,7 @@ class MovieRepositoryImpl implements MovieRepository {
         );
       }
 
-      // 2)  في حاله مفيش كاش
+      // 2) No fresh cache -> fetch remote
       logger.info('MovieRepository: fetching page $page from network');
       final remoteJson = await remote.fetchPopular(page: page);
       await local.cachePage(page, remoteJson);
@@ -68,15 +69,15 @@ class MovieRepositoryImpl implements MovieRepository {
           isFromCache: false,
         ),
       );
-    } on DioError catch (dioErr, stack) {
+    } on DioException catch (dioErr, stack) {
       logger.warn(
         'MovieRepository: network error while fetching page $page: ${dioErr.message}',
       );
-      
-      final fallback = local.getCachedPage(page);
+      // try stale cache fallback (do not delete stale on network error)
+      final fallback = local.getCachedPage(page, allowStale: true);
       if (fallback != null && fallback['results'] is List) {
         logger.info(
-          'MovieRepository: using cached fallback for page $page after network error',
+          'MovieRepository: returning stale cached page $page as fallback (network error)',
         );
         final list = (fallback['results'] as List)
             .map(
@@ -96,7 +97,7 @@ class MovieRepositoryImpl implements MovieRepository {
         );
       }
       logger.error(
-        'MovieRepository: network error no cache fallback',
+        'MovieRepository: network error with no cache fallback',
         error: dioErr,
         stackTrace: stack,
       );
@@ -107,11 +108,10 @@ class MovieRepositoryImpl implements MovieRepository {
         error: e,
         stackTrace: stack,
       );
-
-      final fallback = local.getCachedPage(page);
+      final fallback = local.getCachedPage(page, allowStale: true);
       if (fallback != null && fallback['results'] is List) {
         logger.info(
-          'MovieRepository: using cached fallback for page $page after exception',
+          'MovieRepository: returning stale cached page $page as fallback (exception)',
         );
         final list = (fallback['results'] as List)
             .map(
